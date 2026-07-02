@@ -283,19 +283,26 @@ def run_strategy(sid, cfg, feats, state):
             continue
         pos = book["position"]
         if pos:
-            short = pos["direction"] == "SHORT"
-            hit_stop = f["high"] >= pos["stop"] if short else f["low"] <= pos["stop"]
-            hit_tp = f["low"] <= pos["tp"] if short else f["high"] >= pos["tp"]
-            if hit_stop:
-                close_position(sid, cfg, book, ss, sym, pos, "stop", pos["stop"], f["t0"], f["bars"])
-                book["cooldown_until"] = f["t0"] + 6 * 3600
-                book["position"] = None
-            elif hit_tp:
-                close_position(sid, cfg, book, ss, sym, pos, "tp", pos["tp"], f["t0"], f["bars"])
-                book["position"] = None
-            elif f["t0"] - pos["t_entry"] >= 72 * 3600:
-                close_position(sid, cfg, book, ss, sym, pos, "time", f["close"], f["t0"], f["bars"])
-                book["position"] = None
+            # GH cron会跳档：逐根补检自上次处理以来的所有bar（同bar止损优先，保守）
+            seq = [b for b in f["bars"] if book["last_bar"] < b["ts"] <= f["t0"]]
+            for b in seq:
+                short = pos["direction"] == "SHORT"
+                hit_stop = b["high"] >= pos["stop"] if short else b["low"] <= pos["stop"]
+                hit_tp = b["low"] <= pos["tp"] if short else b["high"] >= pos["tp"]
+                if hit_stop:
+                    close_position(sid, cfg, book, ss, sym, pos, "stop", pos["stop"], b["ts"], f["bars"])
+                    book["cooldown_until"] = b["ts"] + 6 * 3600
+                    pos = None
+                    break
+                if hit_tp:
+                    close_position(sid, cfg, book, ss, sym, pos, "tp", pos["tp"], b["ts"], f["bars"])
+                    pos = None
+                    break
+                if b["ts"] - pos["t_entry"] >= 72 * 3600:
+                    close_position(sid, cfg, book, ss, sym, pos, "time", b["close"], b["ts"], f["bars"])
+                    pos = None
+                    break
+            book["position"] = pos
         if (book["position"] is None and not ss.get("eliminated")
                 and ss["equity"] >= MARGIN and f["t0"] >= book["cooldown_until"]):
             hit = check_entry(sid, cfg, f)
