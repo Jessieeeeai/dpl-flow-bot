@@ -3,7 +3,12 @@ name: dpl-flow-bot
 on:
   schedule:
     - cron: '7 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '留空=正常运行, demo=发送图文范例'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -31,7 +36,7 @@ jobs:
           COINGLASS_API_KEY: ${{ secrets.COINGLASS_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python bot.py
+        run: python bot.py ${{ github.event.inputs.mode }}
 
       - name: commit state
         run: |
