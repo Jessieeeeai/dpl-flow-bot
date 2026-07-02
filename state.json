@@ -1,1 +1,109 @@
-{}
+{
+  "S10": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "S11": {
+    "equity": 10000.0,
+    "n": 1,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": {
+          "no": 1,
+          "direction": "SHORT",
+          "t_entry": 1782982800,
+          "entry": 61159.6,
+          "stop": 61567.288,
+          "tp": 60548.068,
+          "notional": 10000.0
+        },
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "S12": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "S20": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      },
+      "ETH": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "S21": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      },
+      "ETH": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "C10": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  },
+  "C20": {
+    "equity": 10000.0,
+    "n": 0,
+    "eliminated": false,
+    "books": {
+      "BTC": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      },
+      "ETH": {
+        "position": null,
+        "cooldown_until": 0,
+        "last_bar": 1782982800
+      }
+    }
+  }
+}
