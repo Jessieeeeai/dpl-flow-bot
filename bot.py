@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-大漂亮资金流秘籍 — 策略赛马版（纸面验证，5策略并跑）
-记账标准：每单保证金$1000×10倍杠杆=$10,000名义；每策略本金$10,000；
-余额<$1000无法开仓即淘汰。每周一UTC发排位战报。
+大漂亮资金流秘籍 — 策略赛马版（纸面验证，S组固定仓位×5 + C组动态仓位×2）
+记账标准：S组每单保证金$1000×10倍杠杆=$10,000名义；C组同信号但用C层动态仓位；
+每策略本金$10,000；余额<$1000即淘汰。每周一UTC发排位战报。
 用法: python bot.py [demo]
 """
 import csv
@@ -33,6 +33,10 @@ STRATS = {
     "S12": {"name": "阻力衰竭空·维加斯", "side": "S", "gate": "vegas", "buf": 1.002, "syms": ["BTC"]},
     "S20": {"name": "恐慌衰竭多·p15", "side": "L", "q": "p15", "syms": ["BTC", "ETH"]},
     "S21": {"name": "恐慌衰竭多·p10", "side": "L", "q": "p10", "syms": ["BTC", "ETH"]},
+    "C10": {"name": "S10信号+C层仓位", "side": "S", "gate": "ma7", "buf": 1.002,
+            "syms": ["BTC"], "sizing": "clayer"},
+    "C20": {"name": "S20信号+C层仓位", "side": "L", "q": "p15",
+            "syms": ["BTC", "ETH"], "sizing": "clayer"},
 }
 
 
@@ -152,6 +156,7 @@ def features(bars, taker, fund):
         "h4_low3": min(h4l[b] for b in done4[-3:]) if len(done4) >= 3 else None,
         "d1_high5": max(d1h[b] for b in dk[-5:]) if len(dk) >= 5 else None,
         "d1_low5": min(d1l[b] for b in dk[-5:]) if len(dk) >= 5 else None,
+        "atr_pct": sum(kl[t]["high"] - kl[t]["low"] for t in ts[-24:]) / 24 / close,
         "ma7": sum(closes[-168:]) / 168,
         "ma13": sum(closes[-312:]) / min(len(closes), 312),
         "vegas": min(ema_last(closes[-500:], 144), ema_last(closes[-500:], 169)),
@@ -239,7 +244,7 @@ def strat_stats(sid):
 def close_position(sid, cfg, book, ss, sym, pos, reason, exit_px, t0, bars):
     d = -1 if pos["direction"] == "SHORT" else 1
     pnl_pct = d * (exit_px - pos["entry"]) / pos["entry"] - 2 * COST_SIDE
-    pnl_usd = NOTIONAL * pnl_pct
+    pnl_usd = pos.get("notional", NOTIONAL) * pnl_pct
     ss["equity"] = round(ss["equity"] + pnl_usd, 2)
     risk = abs(pos["stop"] - pos["entry"]) / pos["entry"]
     r_mult = pnl_pct / risk if risk else 0
@@ -300,9 +305,17 @@ def run_strategy(sid, cfg, feats, state):
                 r = abs(px - stop)
                 direction = "SHORT" if cfg["side"] == "S" else "LONG"
                 tp = px - 1.5 * r if direction == "SHORT" else px + 1.5 * r
+                if cfg.get("sizing") == "clayer":
+                    risk_frac = r / px
+                    budget = 0.01 if cfg["side"] == "S" else 0.005
+                    lev = min(budget / risk_frac, 0.006 / f["atr_pct"], 5.0)
+                    notional = round(ss["equity"] * lev, 2)
+                    cond += f" · C层名义${notional:,.0f}({lev:.2f}x)"
+                else:
+                    notional = NOTIONAL
                 ss["n"] += 1
                 book["position"] = {"no": ss["n"], "direction": direction, "t_entry": f["t0"],
-                                    "entry": px, "stop": stop, "tp": tp}
+                                    "entry": px, "stop": stop, "tp": tp, "notional": notional}
                 tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
                                                    px, stop, tp, ss["equity"], cond))
         book["last_bar"] = f["t0"]
@@ -330,8 +343,8 @@ def weekly_report(state, now_ts):
     lines = [f"💅 <b>{tgx.BRAND}</b>",
              f"🏁 <b>策略赛马周报</b> — {dt.strftime('%Y-%m-%d')}",
              "━━━━━━━━━━━━━━━",
-             f"规则: 每单$1,000×10倍杠杆 · 每策略本金$10,000", ""]
-    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+             f"规则: S组$1,000×10x固定 · C组C层动态 · 各$10,000本金", ""]
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"]
     for i, (sid, name, eq, wk, st, elim) in enumerate(rows):
         tag = "💀已淘汰" if elim else f"{(eq / START_EQ - 1) * 100:+.1f}%"
         lines.append(f"{medals[i]} <b>{sid}</b> {name}")
