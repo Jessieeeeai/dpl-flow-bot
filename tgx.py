@@ -61,10 +61,17 @@ def send_photo(photo_bytes, caption, parse_mode="HTML"):
         return False
 
 
-def msg_open_race(sid, name, no, sym, direction, entry, sl, tp, equity, cond_desc):
+def msg_open_race(sid, name, no, sym, direction, entry, sl, tp, equity, cond_desc,
+                  notional=10000.0):
     d = "📉 做空" if direction == "SHORT" else "📈 做多"
     sl_pct = abs(sl - entry) / entry * 100
     tp_pct = abs(tp - entry) / entry * 100
+    risk_usd = notional * (sl_pct + 0.14) / 100
+    if abs(notional - 10000.0) < 1:
+        pos_line = f"⚙️ 仓位: 保证金 $1,000 × 10x = 名义 $10,000（S组固定）"
+    else:
+        pos_line = (f"⚙️ 仓位: C层动态 名义 <b>${notional:,.0f}</b>"
+                    f"（{notional / 10000:.2f}x，按止损距离缩放）")
     return (
         f"💅 <b>{BRAND}</b> · 策略赛马\n"
         f"🔔 <b>{sid} 开单 #{no:03d}</b> — {_esc(name)}\n"
@@ -74,7 +81,8 @@ def msg_open_race(sid, name, no, sym, direction, entry, sl, tp, equity, cond_des
         f"📍 入场: <code>${entry:,.2f}</code>\n"
         f"🛑 止损: <code>${sl:,.2f}</code> ({sl_pct:.2f}%)\n"
         f"🎯 止盈: <code>${tp:,.2f}</code> ({tp_pct:.2f}%, 1.5R)\n\n"
-        f"⚙️ 仓位: 保证金 $1,000 × 10x = 名义 $10,000\n"
+        f"{pos_line}\n"
+        f"⚠️ 止损即亏: 约 ${risk_usd:,.0f}（占净值 {risk_usd / equity * 100:.1f}%）\n"
         f"💰 该策略当前净值: <b>${equity:,.0f}</b>\n\n"
         f"<i>📋 纸面赛马 — 非实盘指令</i>"
     )
@@ -91,7 +99,7 @@ def caption_close_race(sid, name, sym, reason, sig, pnl_pct, pnl_usd, r_mult, eq
     return (
         f"💅 <b>{BRAND}</b> · 策略赛马\n"
         f"🧾 <b>{sid} 关单 #{sig.get('no', 0):03d} 复盘</b> — {_esc(name)} {_esc(sym)}\n"
-        f"{'📉 空单' if short else '📈 多单'} · $1,000×10x\n"
+        f"{'📉 空单' if short else '📈 多单'} · 名义${sig.get('notional', 10000):,.0f}\n"
         f"━━━━━━━━━━━━━━━\n"
         f"✅ {fmt(sig['t_entry'])} 进场 <code>${sig['entry']:,.0f}</code>"
         f" (SL ${sig['stop']:,.0f} / TP ${sig['tp']:,.0f})\n"
