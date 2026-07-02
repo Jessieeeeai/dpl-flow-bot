@@ -310,14 +310,13 @@ def run_strategy(sid, cfg, feats, state):
                     budget = 0.01 if cfg["side"] == "S" else 0.005
                     lev = min(budget / risk_frac, 0.006 / f["atr_pct"], 5.0)
                     notional = round(ss["equity"] * lev, 2)
-                    cond += f" · C层名义${notional:,.0f}({lev:.2f}x)"
                 else:
                     notional = NOTIONAL
                 ss["n"] += 1
                 book["position"] = {"no": ss["n"], "direction": direction, "t_entry": f["t0"],
                                     "entry": px, "stop": stop, "tp": tp, "notional": notional}
                 tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
-                                                   px, stop, tp, ss["equity"], cond))
+                                                   px, stop, tp, ss["equity"], cond, notional))
         book["last_bar"] = f["t0"]
 
 
