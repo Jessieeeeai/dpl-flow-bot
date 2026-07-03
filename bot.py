@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-大漂亮资金流秘籍 — 策略赛马版（纸面验证，S组固定仓位×5 + C组动态仓位×2）
+大漂亮资金流秘籍 — 策略赛马版（S组固定仓位×6 + C组动态仓位×2）
 记账标准：S组每单保证金$1000×10倍杠杆=$10,000名义；C组同信号但用C层动态仓位；
 每策略本金$10,000；余额<$1000即淘汰。每周一UTC发排位战报。
 用法: python bot.py [demo]
@@ -31,6 +31,8 @@ STRATS = {
     "S10": {"name": "阻力衰竭空·MA7", "side": "S", "gate": "ma7", "buf": 1.002, "syms": ["BTC"]},
     "S11": {"name": "阻力衰竭空·MA13", "side": "S", "gate": "ma13", "buf": 1.004, "syms": ["BTC"]},
     "S12": {"name": "阻力衰竭空·维加斯", "side": "S", "gate": "vegas", "buf": 1.002, "syms": ["BTC"]},
+    "S13": {"name": "阻力衰竭空·费率动量", "side": "S", "gate": "ma7", "buf": 1.002,
+            "syms": ["BTC"], "d4": True},
     "S20": {"name": "恐慌衰竭多·p15", "side": "L", "q": "p15", "syms": ["BTC", "ETH"]},
     "S21": {"name": "恐慌衰竭多·p10", "side": "L", "q": "p10", "syms": ["BTC", "ETH"]},
     "C10": {"name": "S10信号+C层仓位", "side": "S", "gate": "ma7", "buf": 1.002,
@@ -126,10 +128,12 @@ def features(bars, taker, fund):
     deltas = [taker.get(t, 0.0) for t in ts]
     cvd24 = [sum(deltas[i - 24:i]) / closes[i] for i in range(24, len(ts))]
     srt = sorted(cvd24)
-    fr = None
+    fr, fr_prev24 = None, None
     for ft, fv in reversed(fund):
-        if ft <= t0 + 3600:
+        if fr is None and ft <= t0 + 3600:
             fr = fv
+        if ft <= t0 - 24 * 3600 + 3600:
+            fr_prev24 = fv
             break
     h4h, h4l, h4c = {}, {}, {}
     for t in ts:
@@ -150,7 +154,7 @@ def features(bars, taker, fund):
         "bars": bars, "cvd24": cvd24[-1] if cvd24 else None,
         "p15": srt[int(len(srt) * 0.15)] if len(srt) >= 100 else None,
         "p10": srt[int(len(srt) * 0.10)] if len(srt) >= 100 else None,
-        "slope6": sum(deltas[-6:]) / close, "funding": fr,
+        "slope6": sum(deltas[-6:]) / close, "funding": fr, "funding_prev24": fr_prev24,
         "resistance": max(h4h[b] for b in done4[-20:]) if len(done4) >= 20 else None,
         "h4_high3": max(h4h[b] for b in done4[-3:]) if len(done4) >= 3 else None,
         "h4_low3": min(h4l[b] for b in done4[-3:]) if len(done4) >= 3 else None,
@@ -197,11 +201,17 @@ def check_entry(sid, cfg, f):
                 and f["cvd24"] is not None and f["cvd24"] < 0
                 and fr is not None and fr >= 0 and gate):
             return None
+        d4_tag = ""
+        if cfg.get("d4"):
+            prev = f.get("funding_prev24")
+            if prev is None or fr <= prev:
+                return None
+            d4_tag = f" · FR上升中({prev * 100:+.4f}→{fr * 100:+.4f}%)"
         stop = l01(f, "SHORT", px, cfg["buf"])
         if not (stop and stop > px and stop / px - 1 <= 0.05):
             return None
         return stop, (f"距阻力{(res / px - 1) * 100:.2f}% · CVD {f['cvd24']:.0f} · "
-                      f"FR {fr * 100:+.4f}% · {cfg['gate'].upper()}下方")
+                      f"FR {fr * 100:+.4f}% · {cfg['gate'].upper()}下方{d4_tag}")
     thr = f[cfg["q"]]
     if not (f["cvd24"] is not None and thr is not None and f["cvd24"] < thr
             and f["slope6"] > 0 and f["rsi4h"] is not None and f["rsi4h"] > 50):
@@ -350,7 +360,7 @@ def weekly_report(state, now_ts):
              f"🏁 <b>策略赛马周报</b> — {dt.strftime('%Y-%m-%d')}",
              "━━━━━━━━━━━━━━━",
              f"规则: S组$1,000×10x固定 · C组C层动态 · 各$10,000本金", ""]
-    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"]
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
     for i, (sid, name, eq, wk, st, elim) in enumerate(rows):
         tag = "💀已淘汰" if elim else f"{(eq / START_EQ - 1) * 100:+.1f}%"
         lines.append(f"{medals[i]} <b>{sid}</b> {name}")
