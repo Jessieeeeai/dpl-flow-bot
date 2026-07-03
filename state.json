@@ -7,7 +7,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -19,7 +19,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1783015200,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -31,7 +31,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -43,7 +43,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       },
       "ETH": {
         "position": {
@@ -56,7 +56,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -68,12 +68,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -85,7 +85,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   },
@@ -97,7 +97,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       },
       "ETH": {
         "position": {
@@ -110,7 +110,7 @@
           "notional": 1203.94
         },
         "cooldown_until": 0,
-        "last_bar": 1783029600
+        "last_bar": 1783047600
       }
     }
   }
