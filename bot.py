@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-大漂亮资金流秘籍 — 策略赛马版（S组固定仓位×6 + C组动态仓位×2）
-记账标准：S组每单保证金$1000×10倍杠杆=$10,000名义；C组同信号但用C层动态仓位；
-每策略本金$10,000；余额<$1000即淘汰。每周一UTC发排位战报。
+大漂亮资金流秘籍 — 策略赛马版（纸面验证，5策略并跑）
+记账标准：每单保证金$1000×10倍杠杆=$10,000名义；每策略本金$10,000；
+余额<$1000无法开仓即淘汰。每周一UTC发排位战报。
 用法: python bot.py [demo]
 """
 import csv
@@ -35,6 +35,7 @@ STRATS = {
             "syms": ["BTC"], "d4": True},
     "S20": {"name": "恐慌衰竭多·p15", "side": "L", "q": "p15", "syms": ["BTC", "ETH"]},
     "S21": {"name": "恐慌衰竭多·p10", "side": "L", "q": "p10", "syms": ["BTC", "ETH"]},
+    # C组：信号与S组相同，仓位改用C层动态（对照组，隔离仓位层贡献）
     "C10": {"name": "S10信号+C层仓位", "side": "S", "gate": "ma7", "buf": 1.002,
             "syms": ["BTC"], "sizing": "clayer"},
     "C20": {"name": "S20信号+C层仓位", "side": "L", "q": "p15",
@@ -337,11 +338,31 @@ def run_strategy(sid, cfg, feats, state):
         book["last_bar"] = f["t0"]
 
 
+# 回测身份证（预期胜率 / 每笔均R），周报做符合度评估用
+EXPECT = {"S10": (55, "+0.29R"), "S11": (51, "+0.35R"), "S12": (52, "+0.30R"),
+          "S13": (64, "+0.55R"), "S20": (47, "+0.35R"), "S21": (45, "+0.40R"),
+          "C10": (55, "+0.29R"), "C20": (47, "+0.35R")}
+
+
+def streaks(sid):
+    mw = ml = cw = cl = 0
+    if os.path.exists(TRADES_F):
+        for r in csv.DictReader(open(TRADES_F)):
+            if r["strat"] != sid:
+                continue
+            if float(r["pnl_usd"]) > 0:
+                cw += 1; cl = 0
+            else:
+                cl += 1; cw = 0
+            mw, ml = max(mw, cw), max(ml, cl)
+    return mw, ml
+
+
 def weekly_report(state, now_ts):
     dt = datetime.fromtimestamp(now_ts, tz=timezone.utc)
     week_key = dt.strftime("%G-W%V")
-    if dt.weekday() != 0 or state.get("week_reported") == week_key:
-        return
+    if dt.weekday() != 6 or state.get("week_reported") == week_key:
+        return  # 每周日发
     rows = []
     for sid, cfg in STRATS.items():
         ss = state.get(sid, {"equity": START_EQ})
@@ -350,25 +371,35 @@ def weekly_report(state, now_ts):
         if os.path.exists(TRADES_F):
             for r in csv.DictReader(open(TRADES_F)):
                 if r["strat"] == sid and \
-                        datetime.fromisoformat(r["t_exit"]).strftime("%G-W%V") == \
-                        datetime.fromtimestamp(now_ts - 7 * 86400, tz=timezone.utc).strftime("%G-W%V"):
+                        (now_ts - datetime.fromisoformat(r["t_exit"]).timestamp()) <= 7 * 86400:
                     wk_usd += float(r["pnl_usd"])
         rows.append((sid, cfg["name"], ss.get("equity", START_EQ), wk_usd, st,
                      ss.get("eliminated", False)))
     rows.sort(key=lambda x: -x[2])
     lines = [f"💅 <b>{tgx.BRAND}</b>",
-             f"🏁 <b>策略赛马周报</b> — {dt.strftime('%Y-%m-%d')}",
+             f"🏁 <b>策略赛马周报</b> — {dt.strftime('%Y-%m-%d')} (周日)",
              "━━━━━━━━━━━━━━━",
              f"规则: S组$1,000×10x固定 · C组C层动态 · 各$10,000本金", ""]
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
     for i, (sid, name, eq, wk, st, elim) in enumerate(rows):
         tag = "💀已淘汰" if elim else f"{(eq / START_EQ - 1) * 100:+.1f}%"
+        exp_wr, exp_r = EXPECT.get(sid, (50, "—"))
         lines.append(f"{medals[i]} <b>{sid}</b> {name}")
-        lines.append(f"    净值 <b>${eq:,.0f}</b>（{tag}）· 上周 {wk:+,.0f}$")
-        lines.append(f"    {st['n']}单 {st['wins']}胜{st['losses']}败 "
-                     f"胜率{st['wr'] * 100:.0f}%")
+        lines.append(f"    净值 <b>${eq:,.0f}</b>（{tag}）· 本周 {wk:+,.0f}$")
+        if st["n"]:
+            mw, ml = streaks(sid)
+            lines.append(f"    {st['n']}单 {st['wins']}胜{st['losses']}败 "
+                         f"胜率{st['wr'] * 100:.0f}% · 连胜{mw}/连败{ml}")
+            if st["n"] >= 8:
+                ok = abs(st["wr"] * 100 - exp_wr) <= 15
+                lines.append(f"    vs 回测预期 胜率{exp_wr}% 均{exp_r}: "
+                             f"{'✅ 符合' if ok else '⚠️ 偏离'}")
+            else:
+                lines.append(f"    vs 回测预期 胜率{exp_wr}% 均{exp_r}（样本<8暂不评估）")
+        else:
+            lines.append(f"    尚无成交 · 回测预期 胜率{exp_wr}% 均{exp_r}")
     lines.append("")
-    lines.append("<i>📋 纸面赛马 — 非实盘。谁先跑出来谁上桌。</i>")
+    lines.append("<i>📋 纸面赛马 — 非实盘。样本≥30笔且符合预期者获实盘候选资格。</i>")
     tgx.send_message("\n".join(lines))
     state["week_reported"] = week_key
 
