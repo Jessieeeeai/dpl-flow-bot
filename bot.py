@@ -255,6 +255,38 @@ def strat_stats(sid):
             "wr": wins / n if n else 0, "total_usd": total_usd}
 
 
+EXEC_F = os.path.join(HERE, "exec_log.csv")
+
+
+def log_exec(event, sid="", value=""):
+    """E层执行日志：影子熔断/补检单/数据异常，只记录不干预"""
+    new = not os.path.exists(EXEC_F)
+    with open(EXEC_F, "a", newline="") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(["ts", "event", "strat", "value"])
+        w.writerow([int(time.time()), event, sid, value])
+
+
+def shadow_check(sid, t0):
+    """影子熔断（Kurisko规则，纸面阶段只记录）：单日累计≤-1.5R 或 当日连亏≥3笔"""
+    day = datetime.fromtimestamp(t0, tz=timezone.utc).strftime("%Y-%m-%d")
+    day_r, streak = 0.0, 0
+    if os.path.exists(TRADES_F):
+        for r in csv.DictReader(open(TRADES_F)):
+            if r["strat"] != sid or not r["t_exit"].startswith(day):
+                continue
+            e, s = float(r["entry"]), float(r["stop"])
+            risk = abs(s - e) / e
+            rm = (float(r["pnl_pct"]) / 100) / risk if risk else 0
+            day_r += rm
+            streak = streak + 1 if float(r["pnl_usd"]) <= 0 else 0
+    if day_r <= -1.5:
+        log_exec("SHADOW_HALT_DAYR", sid, round(day_r, 2))
+    if streak >= 3:
+        log_exec("SHADOW_HALT_STREAK", sid, streak)
+
+
 def close_position(sid, cfg, book, ss, sym, pos, reason, exit_px, t0, bars):
     d = -1 if pos["direction"] == "SHORT" else 1
     pnl_pct = d * (exit_px - pos["entry"]) / pos["entry"] - 2 * COST_SIDE
@@ -268,6 +300,7 @@ def close_position(sid, cfg, book, ss, sym, pos, reason, exit_px, t0, bars):
                   pos["direction"], pos["entry"], pos["stop"], pos["tp"], reason,
                   round(pnl_pct * 100, 3), round(pnl_usd, 2), ss["equity"]])
     st = strat_stats(sid)
+    shadow_check(sid, t0)
     sig = dict(pos, exit=exit_px, t_exit=t0, r_mult=r_mult)
     caption = tgx.caption_close_race(sid, cfg["name"], sym, reason, sig,
                                      pnl_pct * 100, pnl_usd, r_mult, ss["equity"], st)
@@ -335,6 +368,9 @@ def run_strategy(sid, cfg, feats, state, raw, fund):
                         else:
                             notional = NOTIONAL
                         ss["n"] += 1
+                        if t_i != f["t0"]:
+                            log_exec("BACKFILL_ENTRY", sid, t_i)
+                        log_exec("ENTRY_ATR", sid, round(fi["atr_pct"], 5))
                         pos = {"no": ss["n"], "direction": direction, "t_entry": t_i,
                                "entry": px, "stop": stop, "tp": tp, "notional": notional}
                         tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
@@ -404,6 +440,15 @@ def weekly_report(state, now_ts, force=False):
         else:
             lines.append(f"    尚无成交 · 回测预期 胜率{exp_wr}% 均{exp_r}")
     lines.append("")
+    # E层执行质量（近7日）
+    if os.path.exists(EXEC_F):
+        ev = {"SHADOW_HALT_DAYR": 0, "SHADOW_HALT_STREAK": 0, "BACKFILL_ENTRY": 0, "DATA_SKIP": 0}
+        for r in csv.DictReader(open(EXEC_F)):
+            if now_ts - int(r["ts"]) <= 7 * 86400 and r["event"] in ev:
+                ev[r["event"]] += 1
+        lines.append(f"🔧 执行质量: 影子熔断{ev['SHADOW_HALT_DAYR'] + ev['SHADOW_HALT_STREAK']}次 · "
+                     f"补检单{ev['BACKFILL_ENTRY']}笔 · 数据跳过{ev['DATA_SKIP']}次")
+        lines.append("")
     lines.append("<i>📋 纸面赛马 — 非实盘。样本≥30笔且符合预期者获实盘候选资格。</i>")
     if tgx.send_message("\n".join(lines)):
         state["week_reported"] = week_key
@@ -451,10 +496,31 @@ def main():
         print("补发周报完成")
         return
     state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+    # E层护栏1：账本自洽校验（净值 = 本金 + Σ已平仓盈亏）
+    for sid in STRATS:
+        ss = state.get(sid)
+        if ss and abs(ss.get("equity", START_EQ) - (START_EQ + strat_stats(sid)["total_usd"])) > 0.05:
+            log_exec("LEDGER_MISMATCH", sid, ss.get("equity"))
+            tgx.send_message(f"⚠️ <b>{tgx.BRAND}</b> E层告警：{sid} 账本不自洽，本轮暂停开单，请人工核对\n<i>📋 纸面赛马 — 非实盘</i>")
+            return
     feats, raw = {}, {}
     btc_fund = fetch_funding("BTCUSDT")
     for sym, pair in (("BTC", "BTCUSDT"), ("ETH", "ETHUSDT")):
         bars, tk = fetch_bars(pair), fetch_taker(pair)
+        # E层护栏2：数据守门（行数/跳变/流数据缺失）
+        bad = ""
+        if len(bars) < 400:
+            bad = f"bars={len(bars)}"
+        elif len(bars) >= 2 and abs(bars[-1]["close"] / bars[-2]["close"] - 1) > 0.2:
+            bad = "价格跳变>20%"
+        elif not tk:
+            bad = "taker空"
+        if bad:
+            log_exec("DATA_SKIP", sym, bad)
+            tgx.send_message(f"⚠️ <b>{tgx.BRAND}</b> E层告警：{sym} 数据异常({bad})，本轮跳过该品种\n<i>📋 纸面赛马 — 非实盘</i>")
+            feats[sym] = None
+            raw[sym] = (bars, tk)
+            continue
         raw[sym] = (bars, tk)
         f = features(bars, tk, btc_fund)
         feats[sym] = f
