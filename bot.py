@@ -116,9 +116,12 @@ def ema_last(vals, span):
     return e
 
 
-def features(bars, taker, fund):
-    cur_hour = int(time.time()) // 3600 * 3600
-    bars = [b for b in bars if b["ts"] < cur_hour]
+def features(bars, taker, fund, t0=None):
+    if t0 is None:
+        cur_hour = int(time.time()) // 3600 * 3600
+        bars = [b for b in bars if b["ts"] < cur_hour]
+    else:
+        bars = [b for b in bars if b["ts"] <= t0]
     if len(bars) < 24 * 14:
         return None
     ts = [b["ts"] for b in bars]
@@ -283,58 +286,60 @@ def close_position(sid, cfg, book, ss, sym, pos, reason, exit_px, t0, bars):
                          f"账户余额 ${ss['equity']:,.0f} 不足单笔保证金 ${MARGIN:,.0f}")
 
 
-def run_strategy(sid, cfg, feats, state):
+def run_strategy(sid, cfg, feats, state, raw, fund):
     ss = state.setdefault(sid, {"equity": START_EQ, "n": 0, "eliminated": False, "books": {}})
     for sym in cfg["syms"]:
         f = feats.get(sym)
         if not f:
             continue
+        bars, tk = raw[sym]
         book = ss["books"].setdefault(sym, {"position": None, "cooldown_until": 0, "last_bar": 0})
         if f["t0"] <= book["last_bar"]:
             continue
+        kl = {b["ts"]: b for b in f["bars"]}
+        seq = sorted(t for t in kl if book["last_bar"] < t <= f["t0"])
         pos = book["position"]
-        if pos:
-            # GH cron会跳档：逐根补检自上次处理以来的所有bar（同bar止损优先，保守）
-            seq = [b for b in f["bars"] if book["last_bar"] < b["ts"] <= f["t0"]]
-            for b in seq:
+        for t_i in seq:
+            b = kl[t_i]
+            if pos:
                 short = pos["direction"] == "SHORT"
                 hit_stop = b["high"] >= pos["stop"] if short else b["low"] <= pos["stop"]
                 hit_tp = b["low"] <= pos["tp"] if short else b["high"] >= pos["tp"]
                 if hit_stop:
-                    close_position(sid, cfg, book, ss, sym, pos, "stop", pos["stop"], b["ts"], f["bars"])
-                    book["cooldown_until"] = b["ts"] + 6 * 3600
+                    close_position(sid, cfg, book, ss, sym, pos, "stop", pos["stop"], t_i, f["bars"])
+                    book["cooldown_until"] = t_i + 6 * 3600
                     pos = None
-                    break
-                if hit_tp:
-                    close_position(sid, cfg, book, ss, sym, pos, "tp", pos["tp"], b["ts"], f["bars"])
+                elif hit_tp:
+                    close_position(sid, cfg, book, ss, sym, pos, "tp", pos["tp"], t_i, f["bars"])
                     pos = None
-                    break
-                if b["ts"] - pos["t_entry"] >= 72 * 3600:
-                    close_position(sid, cfg, book, ss, sym, pos, "time", b["close"], b["ts"], f["bars"])
+                elif t_i - pos["t_entry"] >= 72 * 3600:
+                    close_position(sid, cfg, book, ss, sym, pos, "time", b["close"], t_i, f["bars"])
                     pos = None
-                    break
-            book["position"] = pos
-        if (book["position"] is None and not ss.get("eliminated")
-                and ss["equity"] >= MARGIN and f["t0"] >= book["cooldown_until"]):
-            hit = check_entry(sid, cfg, f)
-            if hit:
-                stop, cond = hit
-                px = f["close"]
-                r = abs(px - stop)
-                direction = "SHORT" if cfg["side"] == "S" else "LONG"
-                tp = px - 1.5 * r if direction == "SHORT" else px + 1.5 * r
-                if cfg.get("sizing") == "clayer":
-                    risk_frac = r / px
-                    budget = 0.01 if cfg["side"] == "S" else 0.005
-                    lev = min(budget / risk_frac, 0.006 / f["atr_pct"], 5.0)
-                    notional = round(ss["equity"] * lev, 2)
-                else:
-                    notional = NOTIONAL
-                ss["n"] += 1
-                book["position"] = {"no": ss["n"], "direction": direction, "t_entry": f["t0"],
-                                    "entry": px, "stop": stop, "tp": tp, "notional": notional}
-                tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
-                                                   px, stop, tp, ss["equity"], cond, notional))
+            if (pos is None and not ss.get("eliminated")
+                    and ss["equity"] >= MARGIN and t_i >= book["cooldown_until"]):
+                # cron跳档补检：历史bar需按该bar重算特征（无前视）
+                fi = f if t_i == f["t0"] else features(bars, tk, fund, t0=t_i)
+                if fi and fi["t0"] == t_i:
+                    hit = check_entry(sid, cfg, fi)
+                    if hit:
+                        stop, cond = hit
+                        px = fi["close"]
+                        r = abs(px - stop)
+                        direction = "SHORT" if cfg["side"] == "S" else "LONG"
+                        tp = px - 1.5 * r if direction == "SHORT" else px + 1.5 * r
+                        if cfg.get("sizing") == "clayer":
+                            risk_frac = r / px
+                            budget = 0.01 if cfg["side"] == "S" else 0.005
+                            lev = min(budget / risk_frac, 0.006 / fi["atr_pct"], 5.0)
+                            notional = round(ss["equity"] * lev, 2)
+                        else:
+                            notional = NOTIONAL
+                        ss["n"] += 1
+                        pos = {"no": ss["n"], "direction": direction, "t_entry": t_i,
+                               "entry": px, "stop": stop, "tp": tp, "notional": notional}
+                        tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
+                                                           px, stop, tp, ss["equity"], cond, notional))
+        book["position"] = pos
         book["last_bar"] = f["t0"]
 
 
@@ -446,16 +451,18 @@ def main():
         print("补发周报完成")
         return
     state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
-    feats = {}
+    feats, raw = {}, {}
     btc_fund = fetch_funding("BTCUSDT")
     for sym, pair in (("BTC", "BTCUSDT"), ("ETH", "ETHUSDT")):
-        f = features(fetch_bars(pair), fetch_taker(pair), btc_fund)
+        bars, tk = fetch_bars(pair), fetch_taker(pair)
+        raw[sym] = (bars, tk)
+        f = features(bars, tk, btc_fund)
         feats[sym] = f
         if f:
             print(f"{sym} bar={datetime.fromtimestamp(f['t0'], tz=timezone.utc)} "
                   f"close={f['close']:.0f} cvd={f['cvd24']:.0f} rsi4h={f['rsi4h'] and round(f['rsi4h'], 1)}")
     for sid, cfg in STRATS.items():
-        run_strategy(sid, cfg, feats, state)
+        run_strategy(sid, cfg, feats, state, raw, btc_fund)
     if feats.get("BTC"):
         weekly_report(state, feats["BTC"]["t0"])
     json.dump(state, open(STATE_F, "w"), indent=2)
