@@ -358,10 +358,10 @@ def streaks(sid):
     return mw, ml
 
 
-def weekly_report(state, now_ts):
+def weekly_report(state, now_ts, force=False):
     dt = datetime.fromtimestamp(now_ts, tz=timezone.utc)
     week_key = dt.strftime("%G-W%V")
-    if dt.weekday() != 6 or state.get("week_reported") == week_key:
+    if not force and (dt.weekday() != 6 or state.get("week_reported") == week_key):
         return  # 每周日发
     rows = []
     for sid, cfg in STRATS.items():
@@ -395,13 +395,15 @@ def weekly_report(state, now_ts):
                 lines.append(f"    vs 回测预期 胜率{exp_wr}% 均{exp_r}: "
                              f"{'✅ 符合' if ok else '⚠️ 偏离'}")
             else:
-                lines.append(f"    vs 回测预期 胜率{exp_wr}% 均{exp_r}（样本<8暂不评估）")
+                lines.append(f"    vs 回测预期 胜率{exp_wr}% 均{exp_r}（样本不足8笔暂不评估）")
         else:
             lines.append(f"    尚无成交 · 回测预期 胜率{exp_wr}% 均{exp_r}")
     lines.append("")
     lines.append("<i>📋 纸面赛马 — 非实盘。样本≥30笔且符合预期者获实盘候选资格。</i>")
-    tgx.send_message("\n".join(lines))
-    state["week_reported"] = week_key
+    if tgx.send_message("\n".join(lines)):
+        state["week_reported"] = week_key
+    else:
+        print("[WEEKLY FAIL] 发送失败，下小时重试")
 
 
 def demo():
@@ -436,6 +438,12 @@ def demo():
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "demo":
         demo()
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "report":
+        state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+        weekly_report(state, int(time.time()), force=True)
+        json.dump(state, open(STATE_F, "w"), indent=2)
+        print("补发周报完成")
         return
     state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
     feats = {}
