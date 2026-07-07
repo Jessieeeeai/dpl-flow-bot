@@ -28,17 +28,17 @@ NOTIONAL = 10000.0
 START_EQ = 10000.0
 
 STRATS = {
-    "S10": {"name": "阻力衰竭空·MA7", "side": "S", "gate": "ma7", "buf": 1.002, "syms": ["BTC"]},
-    "S11": {"name": "阻力衰竭空·MA13", "side": "S", "gate": "ma13", "buf": 1.004, "syms": ["BTC"]},
-    "S12": {"name": "阻力衰竭空·维加斯", "side": "S", "gate": "vegas", "buf": 1.002, "syms": ["BTC"]},
-    "S13": {"name": "阻力衰竭空·费率动量", "side": "S", "gate": "ma7", "buf": 1.002,
+    "S10": {"name": "强弩之末 o1s1l1t1c1", "side": "S", "gate": "ma7", "buf": 1.002, "syms": ["BTC"]},
+    "S11": {"name": "以逸待劳 o2s1l2t1c1", "side": "S", "gate": "ma13", "buf": 1.004, "syms": ["BTC"]},
+    "S12": {"name": "泰山压顶 o3s1l1t1c1", "side": "S", "gate": "vegas", "buf": 1.002, "syms": ["BTC"]},
+    "S13": {"name": "物极必反 o1s4l1t1c1", "side": "S", "gate": "ma7", "buf": 1.002,
             "syms": ["BTC"], "d4": True},
-    "S20": {"name": "恐慌衰竭多·p15", "side": "L", "q": "p15", "syms": ["BTC", "ETH"]},
-    "S21": {"name": "恐慌衰竭多·p10", "side": "L", "q": "p10", "syms": ["BTC", "ETH"]},
+    "S20": {"name": "否极泰来 o4s2l1t1c1", "side": "L", "q": "p15", "syms": ["BTC", "ETH"]},
+    "S21": {"name": "绝处逢生 o4s3l1t1c1", "side": "L", "q": "p10", "syms": ["BTC", "ETH"]},
     # C组：信号与S组相同，仓位改用C层动态（对照组，隔离仓位层贡献）
-    "C10": {"name": "S10信号+C层仓位", "side": "S", "gate": "ma7", "buf": 1.002,
+    "C10": {"name": "量体裁衣 o1s1l1t1c2", "side": "S", "gate": "ma7", "buf": 1.002,
             "syms": ["BTC"], "sizing": "clayer"},
-    "C20": {"name": "S20信号+C层仓位", "side": "L", "q": "p15",
+    "C20": {"name": "量入为出 o4s2l1t1c2", "side": "L", "q": "p15",
             "syms": ["BTC", "ETH"], "sizing": "clayer"},
 }
 
