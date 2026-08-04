@@ -7,19 +7,27 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1785124800,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
   "S11": {
     "equity": 10218.89,
-    "n": 3,
+    "n": 4,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 4,
+          "direction": "SHORT",
+          "t_entry": 1785837600,
+          "entry": 63743.3,
+          "stop": 65718.2565,
+          "tp": 60780.86525,
+          "notional": 10000.0
+        },
         "cooldown_until": 1783015200,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -31,7 +39,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1785124800,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -43,12 +51,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -60,12 +68,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -77,7 +85,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1785124800,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -89,12 +97,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
@@ -106,7 +114,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1785124800,
-        "last_bar": 1785830400
+        "last_bar": 1785841200
       }
     }
   },
