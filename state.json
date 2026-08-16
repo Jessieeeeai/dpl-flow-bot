@@ -15,7 +15,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1785124800,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -35,7 +35,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1783015200,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -55,7 +55,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1785124800,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -67,12 +67,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -84,12 +84,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -109,7 +109,7 @@
           "notional": 2935.36
         },
         "cooldown_until": 1785124800,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -121,12 +121,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
@@ -146,9 +146,9 @@
           "notional": 10000.0
         },
         "cooldown_until": 1785124800,
-        "last_bar": 1786831200
+        "last_bar": 1786838400
       }
     }
   },
-  "week_reported": "2026-W32"
+  "week_reported": "2026-W33"
 }
