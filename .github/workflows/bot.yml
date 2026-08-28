@@ -2,7 +2,7 @@ name: dpl-flow-bot
 
 on:
   schedule:
-    - cron: '7 * * * *'
+    - cron: '7,27,47 * * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -37,6 +37,19 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python bot.py ${{ github.event.inputs.mode }}
+
+      - name: publish feed
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          if [ -n "$GIST_TOKEN" ] && [ -f feed.json ]; then
+          python -c "
+          import json, os, urllib.request
+          body = json.dumps({'files': {'feed.json': {'content': open('feed.json').read()}}}).encode()
+          req = urllib.request.Request('https://api.github.com/gists/5a3e2e85c7c6fd01eeb2f73a6e72b9fd', data=body, method='PATCH', headers={'Authorization': 'Bearer ' + os.environ['GIST_TOKEN'], 'Accept': 'application/vnd.github+json'})
+          print('feed gist:', urllib.request.urlopen(req).status)
+          "
+          fi
 
       - name: commit state
         run: |
