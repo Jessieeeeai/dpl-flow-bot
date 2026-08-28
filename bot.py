@@ -456,6 +456,59 @@ def weekly_report(state, now_ts, force=False):
         print("[WEEKLY FAIL] 发送失败，下小时重试")
 
 
+FEED_STRATS = ("S20", "S21", "C20")
+FEED_F = os.path.join(HERE, "feed.json")
+
+
+def build_feed(state):
+    """JSON Feed 1.1：净值前三（S20/S21/C20）订阅信号（纸面）。"""
+    items = []
+    if os.path.exists(TRADES_F):
+        for r in csv.DictReader(open(TRADES_F)):
+            if r["strat"] not in FEED_STRATS:
+                continue
+            name = STRATS[r["strat"]]["name"]
+            pnl = float(r["pnl_pct"])
+            usd = float(r["pnl_usd"])
+            how = {"tp": "止盈", "stop": "止损", "time": "超时平仓"}.get(r["reason"], r["reason"])
+            items.append({
+                "id": f'{r["strat"]}-{r["no"]}-close',
+                "title": f'[平仓] {r["strat"]} {name} · {r["symbol"]} {r["direction"]} · {how} {pnl:+.2f}%',
+                "date_published": r["t_exit"],
+                "content_text": (f'{r["strat"]} {name} | {r["symbol"]} {r["direction"]}\n'
+                                 f'入场 {r["t_entry"][:16]} @ {float(r["entry"]):.2f}\n'
+                                 f'出场 {r["t_exit"][:16]}（{how}，止损位{float(r["stop"]):.2f}/止盈位{float(r["tp"]):.2f}）\n'
+                                 f'盈亏 {pnl:+.2f}%（{usd:+.0f}$）· 策略净值 ${float(r["equity"]):,.0f}\n'
+                                 f'⚠️ 纸面验证信号，非实盘指令，不构成投资建议'),
+            })
+    for sid in FEED_STRATS:
+        ss = state.get(sid) or {}
+        for sym, book in (ss.get("books") or {}).items():
+            pos = book.get("position")
+            if not pos:
+                continue
+            t = datetime.fromtimestamp(pos["t_entry"], tz=timezone.utc).isoformat()
+            items.append({
+                "id": f'{sid}-{pos["no"]}-open',
+                "title": f'[开仓] {sid} {STRATS[sid]["name"]} · {sym} {pos["direction"]} @ {pos["entry"]:.2f}',
+                "date_published": t,
+                "content_text": (f'{sid} {STRATS[sid]["name"]} | {sym} {pos["direction"]}\n'
+                                 f'入场 {t[:16]} @ {pos["entry"]:.2f}\n'
+                                 f'止损 {pos["stop"]:.2f} · 止盈 {pos["tp"]:.2f}（1.5R，最长72h）\n'
+                                 f'名义仓位 ${pos.get("notional", NOTIONAL):,.0f}\n'
+                                 f'⚠️ 纸面验证信号，非实盘指令，不构成投资建议'),
+            })
+    items.sort(key=lambda x: x["date_published"], reverse=True)
+    feed = {
+        "version": "https://jsonfeed.org/version/1.1",
+        "title": "大漂亮资金流秘籍 · 前三马订阅信号（纸面验证）",
+        "description": "S20否极泰来(多·固定仓) · S21绝处逢生(多·p10确认级) · C20量入为出(多·C层动态仓)。纸面赛马信号，非实盘指令。",
+        "items": items[:60],
+    }
+    json.dump(feed, open(FEED_F, "w"), ensure_ascii=False, indent=1)
+    print(f"feed.json: {len(items[:60])} items")
+
+
 def demo():
     """发送开单+关单图文范例（用真实BTC K线）"""
     bars = fetch_bars("BTCUSDT", 200)
@@ -532,6 +585,7 @@ def main():
     if feats.get("BTC"):
         weekly_report(state, feats["BTC"]["t0"])
     json.dump(state, open(STATE_F, "w"), indent=2)
+    build_feed(state)
     print("state 已保存")
 
 
