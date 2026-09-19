@@ -7,7 +7,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1788483600,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -19,7 +19,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1787083200,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -31,7 +31,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1788483600,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -51,7 +51,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 0,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       },
       "ETH": {
         "position": {
@@ -64,7 +64,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1789502400,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -76,12 +76,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1787479200,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -93,7 +93,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1788483600,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -113,7 +113,7 @@
           "notional": 4646.46
         },
         "cooldown_until": 0,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       },
       "ETH": {
         "position": {
@@ -126,7 +126,7 @@
           "notional": 3262.36
         },
         "cooldown_until": 1789502400,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
@@ -138,7 +138,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1787083200,
-        "last_bar": 1789833600
+        "last_bar": 1789840800
       }
     }
   },
