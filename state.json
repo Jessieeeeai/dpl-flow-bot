@@ -15,7 +15,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1788483600,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -27,19 +27,27 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1787083200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
   "S12": {
     "equity": 9290.84,
-    "n": 6,
+    "n": 7,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 7,
+          "direction": "SHORT",
+          "t_entry": 1790600400,
+          "entry": 83609.1,
+          "stop": 87509.0419,
+          "tp": 77759.18715000001,
+          "notional": 10000.0
+        },
         "cooldown_until": 1788483600,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -51,12 +59,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -68,12 +76,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1787479200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -93,7 +101,7 @@
           "notional": 2692.15
         },
         "cooldown_until": 1788483600,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -105,12 +113,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
@@ -130,7 +138,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1787083200,
-        "last_bar": 1790589600
+        "last_bar": 1790618400
       }
     }
   },
