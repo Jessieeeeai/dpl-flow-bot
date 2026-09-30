@@ -15,7 +15,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1788483600,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -27,7 +27,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1787083200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -47,7 +47,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1788483600,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -59,7 +59,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       },
       "ETH": {
         "position": {
@@ -72,7 +72,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1789891200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -84,7 +84,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       },
       "ETH": {
         "position": {
@@ -97,7 +97,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1787479200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -117,7 +117,7 @@
           "notional": 2692.15
         },
         "cooldown_until": 1788483600,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -129,7 +129,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       },
       "ETH": {
         "position": {
@@ -142,7 +142,7 @@
           "notional": 1945.37
         },
         "cooldown_until": 1789891200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
@@ -162,7 +162,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1787083200,
-        "last_bar": 1790712000
+        "last_bar": 1790722800
       }
     }
   },
