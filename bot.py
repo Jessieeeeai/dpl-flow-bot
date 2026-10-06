@@ -597,7 +597,75 @@ def catchup(state, since=CATCHUP_SINCE):
     return ok
 
 
+def stats_report(state):
+    """每个策略开赛以来的开单统计，按净值排序推一条（超长分条）。"""
+    rows = list(csv.DictReader(open(TRADES_F))) if os.path.exists(TRADES_F) else []
+    since = rows[0]["t_entry"][:10] if rows else "—"
+    how = {"tp": "止盈", "stop": "止损", "time": "到期"}
+    blocks = []
+    order = sorted(STRATS, key=lambda s: -(state.get(s) or {}).get("equity", START_EQ))
+    for sid in order:
+        cfg = STRATS[sid]
+        ss = state.get(sid) or {}
+        t = [r for r in rows if r["strat"] == sid]
+        n = len(t)
+        eq = ss.get("equity", START_EQ)
+        head = (f"<b>{sid}</b> {_esc_name(cfg['name'])} · {'做空' if cfg['side'] == 'S' else '做多'}"
+                f"{' · C层动态仓' if cfg.get('sizing') == 'clayer' else ''}")
+        if not n:
+            blocks.append(f"{head}\n    尚无平仓")
+            continue
+        w = sum(float(r["pnl_usd"]) > 0 for r in t)
+        usd = sum(float(r["pnl_usd"]) for r in t)
+        rs = []
+        for r in t:
+            e, s_ = float(r["entry"]), float(r["stop"])
+            risk = abs(s_ - e) / e
+            rs.append(float(r["pnl_pct"]) / 100 / risk if risk else 0)
+        cnt = {k: sum(r["reason"] == k for r in t) for k in how}
+        syms = {}
+        for r in t:
+            syms[r["symbol"]] = syms.get(r["symbol"], 0) + 1
+        mw, ml = streaks(sid)
+        exp_wr, exp_r = EXPECT.get(sid, (50, "—"))
+        holding = [f"{k} #{b['position']['no']:03d}" for k, b in (ss.get("books") or {}).items()
+                   if b.get("position")]
+        blocks.append(
+            f"{head}\n"
+            f"    {n}单 {w}胜{n - w}败 胜率<b>{w / n * 100:.0f}%</b> · 均{sum(rs) / n:+.2f}R · 累计<b>{usd:+,.0f}$</b>\n"
+            f"    出场: 止盈{cnt['tp']} / 止损{cnt['stop']} / 到期{cnt['time']} · "
+            + " ".join(f"{k}{v}" for k, v in sorted(syms.items())) + "\n"
+            f"    净值 ${eq:,.0f}（{(eq / START_EQ - 1) * 100:+.1f}%）· 连胜{mw}/连败{ml}"
+            f" · 最近平仓 {t[-1]['t_exit'][5:10]}\n"
+            f"    回测预期 胜率{exp_wr}% 均{exp_r}"
+            + (f"\n    📍持仓中: {', '.join(holding)}" if holding else ""))
+    head = [f"💅 <b>{tgx.BRAND}</b> · 策略赛马",
+            f"📊 <b>各策略开单统计</b>（{since} 开赛至今）",
+            "━━━━━━━━━━━━━━━"]
+    tail = "<i>📋 纸面赛马 — 非实盘</i>"
+    chunks, cur = [], "\n".join(head)
+    for b in blocks + [tail]:
+        if len(cur) + len(b) + 2 > 3800:
+            chunks.append(cur)
+            cur = b
+        else:
+            cur += "\n\n" + b
+    chunks.append(cur)
+    ok = all(tgx.send_message(c) for c in chunks)
+    print(f"stats: {len(blocks)} 个策略, {len(chunks)} 条消息 → {'OK' if ok else 'FAIL'}")
+    return ok
+
+
+def _esc_name(s):
+    return tgx._esc(s)
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "stats":
+        state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+        if not stats_report(state):
+            sys.exit(1)
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "demo":
         demo()
         return
