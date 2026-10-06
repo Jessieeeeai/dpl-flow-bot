@@ -61,6 +61,57 @@ def send_photo(photo_bytes, caption, parse_mode="HTML"):
         return False
 
 
+# ── 发送失败补发队列 ─────────────────────────────────────────
+# 机器人失效/网络失败时，消息不再直接丢掉：存进 state["outbox"]，
+# 下一轮先按原顺序补发，补发成功才继续发新消息（保证顺序不乱）。
+OUTBOX = []
+OUTBOX_MAX = 200
+
+
+def outbox_load(items):
+    OUTBOX[:] = list(items or [])
+
+
+def outbox_dump():
+    return OUTBOX[-OUTBOX_MAX:]
+
+
+def _stamp(ts):
+    from datetime import datetime, timezone
+    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%m-%d %H:%M")
+
+
+def outbox_flush():
+    """按顺序补发积压消息；遇到失败就停，剩下的留到下一轮。返回补发成功条数。"""
+    sent = 0
+    while OUTBOX:
+        item = OUTBOX[0]
+        text = f"⏪ <i>补发 · 原定 {_stamp(item['t'])} UTC</i>\n{item['text']}"
+        if not send_message(text[:4096]):
+            break
+        OUTBOX.pop(0)
+        sent += 1
+    return sent
+
+
+def notify(text):
+    """发文字；前面还有积压或本次失败 → 进队列。"""
+    import time
+    if OUTBOX or not send_message(text):
+        OUTBOX.append({"t": int(time.time()), "text": text})
+        return False
+    return True
+
+
+def notify_photo(png, caption):
+    """发图文；失败退回文字，再失败进队列（图片不存，只补发文字）。"""
+    import time
+    if not OUTBOX and (send_photo(png, caption) or send_message(caption)):
+        return True
+    OUTBOX.append({"t": int(time.time()), "text": caption})
+    return False
+
+
 def msg_open_race(sid, name, no, sym, direction, entry, sl, tp, equity, cond_desc,
                   notional=10000.0):
     d = "📉 做空" if direction == "SHORT" else "📈 做多"

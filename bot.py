@@ -307,14 +307,13 @@ def close_position(sid, cfg, book, ss, sym, pos, reason, exit_px, t0, bars):
     try:
         import chart
         png = chart.render_close_chart("DPL-Flow", pos["no"], sid, sig, bars)
-        if not tgx.send_photo(png, caption):
-            tgx.send_message(caption)
+        tgx.notify_photo(png, caption)
     except Exception as e:
         print(f"[CHART FALLBACK] {e}")
-        tgx.send_message(caption)
+        tgx.notify(caption)
     if ss["equity"] < MARGIN and not ss.get("eliminated"):
         ss["eliminated"] = True
-        tgx.send_message(f"💅 <b>{tgx.BRAND}</b>\n"
+        tgx.notify(f"💅 <b>{tgx.BRAND}</b>\n"
                          f"💀 <b>{sid} {cfg['name']} 淘汰出局</b>\n"
                          f"账户余额 ${ss['equity']:,.0f} 不足单笔保证金 ${MARGIN:,.0f}")
 
@@ -373,7 +372,7 @@ def run_strategy(sid, cfg, feats, state, raw, fund):
                         log_exec("ENTRY_ATR", sid, round(fi["atr_pct"], 5))
                         pos = {"no": ss["n"], "direction": direction, "t_entry": t_i,
                                "entry": px, "stop": stop, "tp": tp, "notional": notional}
-                        tgx.send_message(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
+                        tgx.notify(tgx.msg_open_race(sid, cfg["name"], ss["n"], sym, direction,
                                                            px, stop, tp, ss["equity"], cond, notional))
         book["position"] = pos
         book["last_bar"] = f["t0"]
@@ -450,10 +449,9 @@ def weekly_report(state, now_ts, force=False):
                      f"补检单{ev['BACKFILL_ENTRY']}笔 · 数据跳过{ev['DATA_SKIP']}次")
         lines.append("")
     lines.append("<i>📋 纸面赛马 — 非实盘。样本≥30笔且符合预期者获实盘候选资格。</i>")
-    if tgx.send_message("\n".join(lines)):
-        state["week_reported"] = week_key
-    else:
-        print("[WEEKLY FAIL] 发送失败，下小时重试")
+    if not tgx.notify("\n".join(lines)):
+        print("[WEEKLY QUEUED] 发送失败，已进补发队列")
+    state["week_reported"] = week_key
 
 
 FEED_STRATS = ("S20", "S21", "C20")
@@ -538,23 +536,102 @@ def demo():
     print(f"demo 发送: {'OK' if ok else 'FAIL'}")
 
 
+def ping():
+    """换 token 后的连通测试：只发一条文字，不动 state。"""
+    ok = tgx.send_message(f"💅 <b>{tgx.BRAND}</b>\n✅ 推送通道测试：新机器人已接通\n"
+                          f"<i>{datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC</i>")
+    print(f"ping: {'OK' if ok else 'FAIL — 检查 TELEGRAM_BOT_TOKEN / 是否已对机器人发过 /start'}")
+    if not ok:
+        sys.exit(1)
+
+
+CATCHUP_SINCE = "2026-09-15T15:00:00+00:00"  # 旧机器人最后一条成功推送之后
+
+
+def catchup(state, since=CATCHUP_SINCE):
+    """把 since 之后漏推的平仓 + 当前持仓 + 各策略净值汇总补发。"""
+    rows = []
+    if os.path.exists(TRADES_F):
+        rows = [r for r in csv.DictReader(open(TRADES_F)) if r["t_exit"] >= since]
+    how = {"tp": "🎯止盈", "stop": "🛑止损", "time": "⏱到期"}
+    head = [f"💅 <b>{tgx.BRAND}</b> · 策略赛马",
+            f"⏪ <b>停播期间补发</b>（{since[:10]} 起，平仓 {len(rows)} 笔）",
+            "━━━━━━━━━━━━━━━"]
+    body = []
+    for r in rows:
+        usd = float(r["pnl_usd"])
+        body.append(f"{r['t_exit'][5:16].replace('T', ' ')} <b>{r['strat']}</b> #{int(r['no']):03d} "
+                    f"{r['symbol']} {'空' if r['direction'] == 'SHORT' else '多'} "
+                    f"{how.get(r['reason'], r['reason'])} {usd:+,.0f}$ {'✅' if usd > 0 else '❌'}")
+    if rows:
+        tot = sum(float(r["pnl_usd"]) for r in rows)
+        wins = sum(float(r["pnl_usd"]) > 0 for r in rows)
+        body.append(f"\n小计: {wins}胜{len(rows) - wins}败 · 合计 <b>{tot:+,.0f}$</b>")
+    body.append("\n📍 <b>当前持仓</b>")
+    n_open = 0
+    for sid in STRATS:
+        for sym, book in ((state.get(sid) or {}).get("books") or {}).items():
+            pos = book.get("position")
+            if pos:
+                n_open += 1
+                body.append(f"<b>{sid}</b> #{pos['no']:03d} {sym} {pos['direction']} @ {pos['entry']:,.0f} "
+                            f"(SL {pos['stop']:,.0f} / TP {pos['tp']:,.0f})")
+    if not n_open:
+        body.append("无")
+    body.append("\n💰 <b>各策略净值</b>")
+    for sid, cfg in sorted(STRATS.items(), key=lambda kv: -(state.get(kv[0]) or {}).get("equity", START_EQ)):
+        eq = (state.get(sid) or {}).get("equity", START_EQ)
+        body.append(f"<b>{sid}</b> {cfg['name']} ${eq:,.0f}（{(eq / START_EQ - 1) * 100:+.1f}%）")
+    body.append("\n<i>📋 纸面赛马 — 非实盘</i>")
+    # TG 单条上限 4096 字，按行切
+    chunks, cur = [], "\n".join(head)
+    for line in body:
+        if len(cur) + len(line) + 1 > 3800:
+            chunks.append(cur)
+            cur = line
+        else:
+            cur += "\n" + line
+    chunks.append(cur)
+    ok = all(tgx.send_message(c) for c in chunks)
+    print(f"catchup: {len(rows)} 笔平仓, {n_open} 个持仓, {len(chunks)} 条消息 → {'OK' if ok else 'FAIL'}")
+    return ok
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "demo":
         demo()
         return
+    if len(sys.argv) > 1 and sys.argv[1] == "ping":
+        ping()
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "catchup":
+        state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+        since = sys.argv[2] if len(sys.argv) > 2 else CATCHUP_SINCE
+        if not catchup(state, since):
+            sys.exit(1)
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "report":
         state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+        tgx.outbox_load(state.get("outbox"))
+        tgx.outbox_flush()
         weekly_report(state, int(time.time()), force=True)
+        state["outbox"] = tgx.outbox_dump()
         json.dump(state, open(STATE_F, "w"), indent=2)
         print("补发周报完成")
         return
     state = json.load(open(STATE_F)) if os.path.exists(STATE_F) else {}
+    tgx.outbox_load(state.get("outbox"))
+    if tgx.OUTBOX:
+        n = tgx.outbox_flush()
+        print(f"补发队列: 成功 {n} 条，剩余 {len(tgx.OUTBOX)} 条")
     # E层护栏1：账本自洽校验（净值 = 本金 + Σ已平仓盈亏）
     for sid in STRATS:
         ss = state.get(sid)
         if ss and abs(ss.get("equity", START_EQ) - (START_EQ + strat_stats(sid)["total_usd"])) > 0.05:
             log_exec("LEDGER_MISMATCH", sid, ss.get("equity"))
             tgx.send_message(f"⚠️ <b>{tgx.BRAND}</b> E层告警：{sid} 账本不自洽，本轮暂停开单，请人工核对\n<i>📋 纸面赛马 — 非实盘</i>")
+            state["outbox"] = tgx.outbox_dump()  # 已补发的出队要落盘，避免重复补发
+            json.dump(state, open(STATE_F, "w"), indent=2)
             return
     feats, raw = {}, {}
     btc_fund = fetch_funding("BTCUSDT")
@@ -584,6 +661,7 @@ def main():
         run_strategy(sid, cfg, feats, state, raw, btc_fund)
     if feats.get("BTC"):
         weekly_report(state, feats["BTC"]["t0"])
+    state["outbox"] = tgx.outbox_dump()
     json.dump(state, open(STATE_F, "w"), indent=2)
     build_feed(state)
     print("state 已保存")
