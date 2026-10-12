@@ -1,25 +1,41 @@
 {
   "S10": {
     "equity": 9577.76,
-    "n": 10,
+    "n": 11,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 11,
+          "direction": "SHORT",
+          "t_entry": 1791774000,
+          "entry": 83572.0,
+          "stop": 85816.1785,
+          "tp": 80205.73225,
+          "notional": 10000.0
+        },
         "cooldown_until": 1791752400,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
   "S11": {
     "equity": 9734.57,
-    "n": 7,
+    "n": 8,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 8,
+          "direction": "SHORT",
+          "t_entry": 1791770400,
+          "entry": 83795.9,
+          "stop": 85987.29749999999,
+          "tp": 80508.80375,
+          "notional": 10000.0
+        },
         "cooldown_until": 1791752400,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
@@ -31,7 +47,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1791752400,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
@@ -43,12 +59,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
@@ -60,24 +76,32 @@
       "BTC": {
         "position": null,
         "cooldown_until": 0,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1787479200,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
   "C10": {
     "equity": 9692.53,
-    "n": 10,
+    "n": 11,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 11,
+          "direction": "SHORT",
+          "t_entry": 1791774000,
+          "entry": 83572.0,
+          "stop": 85816.1785,
+          "tp": 80205.73225,
+          "notional": 3609.45
+        },
         "cooldown_until": 1791752400,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
@@ -89,24 +113,32 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
   "S13": {
     "equity": 9899.43,
-    "n": 7,
+    "n": 8,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": null,
+        "position": {
+          "no": 8,
+          "direction": "SHORT",
+          "t_entry": 1791774000,
+          "entry": 83572.0,
+          "stop": 85816.1785,
+          "tp": 80205.73225,
+          "notional": 10000.0
+        },
         "cooldown_until": 1791752400,
-        "last_bar": 1791741600
+        "last_bar": 1791792000
       }
     }
   },
