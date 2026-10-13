@@ -15,7 +15,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1791752400,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -35,7 +35,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1791752400,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -55,7 +55,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1791752400,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -75,12 +75,12 @@
           "notional": 10000.0
         },
         "cooldown_until": 1789891200,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -100,12 +100,12 @@
           "notional": 10000.0
         },
         "cooldown_until": 0,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1787479200,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -125,7 +125,7 @@
           "notional": 3609.45
         },
         "cooldown_until": 1791752400,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -145,12 +145,12 @@
           "notional": 1331.44
         },
         "cooldown_until": 1789891200,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1789891200,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
@@ -170,7 +170,7 @@
           "notional": 10000.0
         },
         "cooldown_until": 1791752400,
-        "last_bar": 1791903600
+        "last_bar": 1791921600
       }
     }
   },
