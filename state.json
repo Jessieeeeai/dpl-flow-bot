@@ -7,7 +7,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792612800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
@@ -19,7 +19,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792612800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
@@ -31,12 +31,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792612800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
   "S20": {
-    "equity": 10763.61,
+    "equity": 10664.34,
     "n": 18,
     "eliminated": false,
     "books": {
@@ -51,20 +51,12 @@
           "notional": 10000.0
         },
         "cooldown_until": 1792090800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       },
       "ETH": {
-        "position": {
-          "no": 18,
-          "direction": "LONG",
-          "t_entry": 1792627200,
-          "entry": 2472.41,
-          "stop": 2451.32752,
-          "tp": 2504.03372,
-          "notional": 10000.0
-        },
-        "cooldown_until": 1789891200,
-        "last_bar": 1792627200
+        "position": null,
+        "cooldown_until": 1792652400,
+        "last_bar": 1792648800
       }
     }
   },
@@ -76,12 +68,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792090800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1787479200,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
@@ -93,12 +85,12 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792612800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
   "C20": {
-    "equity": 10164.22,
+    "equity": 10105.05,
     "n": 18,
     "eliminated": false,
     "books": {
@@ -113,20 +105,12 @@
           "notional": 1035.19
         },
         "cooldown_until": 1792090800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       },
       "ETH": {
-        "position": {
-          "no": 18,
-          "direction": "LONG",
-          "t_entry": 1792627200,
-          "entry": 2472.41,
-          "stop": 2451.32752,
-          "tp": 2504.03372,
-          "notional": 5959.95
-        },
-        "cooldown_until": 1789891200,
-        "last_bar": 1792627200
+        "position": null,
+        "cooldown_until": 1792652400,
+        "last_bar": 1792648800
       }
     }
   },
@@ -138,7 +122,7 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792612800,
-        "last_bar": 1792627200
+        "last_bar": 1792648800
       }
     }
   },
