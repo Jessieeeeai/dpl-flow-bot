@@ -1,78 +1,54 @@
 {
   "S10": {
-    "equity": 10000.46,
+    "equity": 9877.8,
     "n": 18,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": {
-          "no": 18,
-          "direction": "SHORT",
-          "t_entry": 1795431600,
-          "entry": 61402.2,
-          "stop": 62069.391,
-          "tp": 60401.41349999999,
-          "notional": 10000.0
-        },
-        "cooldown_until": 1793196000,
-        "last_bar": 1795431600
+        "position": null,
+        "cooldown_until": 1795460400,
+        "last_bar": 1795474800
       }
     }
   },
   "S11": {
-    "equity": 10222.78,
+    "equity": 10079.94,
     "n": 14,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": {
-          "no": 14,
-          "direction": "SHORT",
-          "t_entry": 1795431600,
-          "entry": 61402.2,
-          "stop": 62193.282,
-          "tp": 60215.57699999999,
-          "notional": 10000.0
-        },
-        "cooldown_until": 1793196000,
-        "last_bar": 1795431600
+        "position": null,
+        "cooldown_until": 1795460400,
+        "last_bar": 1795474800
       }
     }
   },
   "S12": {
-    "equity": 9552.31,
+    "equity": 9429.65,
     "n": 15,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": {
-          "no": 15,
-          "direction": "SHORT",
-          "t_entry": 1795431600,
-          "entry": 61402.2,
-          "stop": 62069.391,
-          "tp": 60401.41349999999,
-          "notional": 10000.0
-        },
-        "cooldown_until": 1793134800,
-        "last_bar": 1795431600
+        "position": null,
+        "cooldown_until": 1795460400,
+        "last_bar": 1795474800
       }
     }
   },
   "S20": {
-    "equity": 9684.55,
-    "n": 19,
+    "equity": 9930.84,
+    "n": 20,
     "eliminated": false,
     "books": {
       "BTC": {
         "position": null,
         "cooldown_until": 1792872000,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1793934000,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       }
     }
   },
@@ -84,69 +60,53 @@
       "BTC": {
         "position": null,
         "cooldown_until": 1792090800,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1793934000,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       }
     }
   },
   "C10": {
-    "equity": 9820.82,
+    "equity": 9731.13,
     "n": 18,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": {
-          "no": 18,
-          "direction": "SHORT",
-          "t_entry": 1795431600,
-          "entry": 61402.2,
-          "stop": 62069.391,
-          "tp": 60401.41349999999,
-          "notional": 7312.35
-        },
-        "cooldown_until": 1793196000,
-        "last_bar": 1795431600
+        "position": null,
+        "cooldown_until": 1795460400,
+        "last_bar": 1795474800
       }
     }
   },
   "C20": {
-    "equity": 10000.99,
-    "n": 19,
+    "equity": 10071.96,
+    "n": 20,
     "eliminated": false,
     "books": {
       "BTC": {
         "position": null,
         "cooldown_until": 1792872000,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       },
       "ETH": {
         "position": null,
         "cooldown_until": 1793934000,
-        "last_bar": 1795431600
+        "last_bar": 1795474800
       }
     }
   },
   "S13": {
-    "equity": 10158.19,
+    "equity": 10035.53,
     "n": 14,
     "eliminated": false,
     "books": {
       "BTC": {
-        "position": {
-          "no": 14,
-          "direction": "SHORT",
-          "t_entry": 1795431600,
-          "entry": 61402.2,
-          "stop": 62069.391,
-          "tp": 60401.41349999999,
-          "notional": 10000.0
-        },
-        "cooldown_until": 1793196000,
-        "last_bar": 1795431600
+        "position": null,
+        "cooldown_until": 1795460400,
+        "last_bar": 1795474800
       }
     }
   },
